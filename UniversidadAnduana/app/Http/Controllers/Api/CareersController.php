@@ -27,7 +27,7 @@ class CareersController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|max:255|unique:careers',
+            'nombre_carrera' => 'required|max:255|unique:careers',
         ]);
 
         if ($validator->fails()) {
@@ -40,7 +40,7 @@ class CareersController extends Controller
         }
 
         $career = Careers::create([
-            'name' => $request->name,
+            'nombre_carrera' => $request->nombre_carrera,
         ]);
 
         if (!$career) {
@@ -92,7 +92,7 @@ class CareersController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'name' => 'required|max:255|unique:careers,name,' . $id,
+            'nombre_carrera' => 'required|max:255|unique:careers,nombre_carrera,' . $id,
         ]);
 
         if ($validator->fails()) {
@@ -104,7 +104,7 @@ class CareersController extends Controller
             return response()->json($data, 400);
         }
 
-        $career->name = $request->name;
+        $career->nombre_carrera = $request->nombre_carrera;
         $career->save();
 
         $data = [

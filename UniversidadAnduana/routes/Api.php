@@ -30,9 +30,6 @@ Route::delete('/student/{id}', [StudentController:: class, 'destroy']);
 
 
 
-
-
-
 Route::get('/careers', [CareersController::class, 'index']);
 
 Route::get('/careers/{id}', [CareersController::class, 'show']);

@@ -9,7 +9,7 @@ class Careers extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name'];
+    protected $fillable = ['nombre_carrera'];
 
     // Relación con estudiantes (si es necesaria)
     public function students()
