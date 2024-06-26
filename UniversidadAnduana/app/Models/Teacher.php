@@ -3,18 +3,18 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 
-class Student extends Model
+class Teacher extends Authenticatable
 {
-    use HasFactory;
+    use HasFactory, Notifiable;
 
     protected $fillable = [
         'nombre',
         'apellido',
         'email',
         'password',
-        'nombre_carrera', // Agregamos 'nombre_carrera' al array $fillable
     ];
 
     protected $hidden = [
@@ -22,6 +22,7 @@ class Student extends Model
         'remember_token',
     ];
 
-    // Aquí podrías añadir relaciones con otras tablas si es necesario
-
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+    ];
 }

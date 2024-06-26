@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use App\Models\Student;
@@ -10,67 +11,57 @@ use Illuminate\Support\Facades\Validator;
 
 class StudentController extends Controller
 {
-    public function index() 
-    { 
+
+    public function index()
+    {
         $students = Student::all();
-
-        if ($students->isEmpty()) {
-            $data = [
-                'message' => 'No hay estudiantes',
-                'status' => 200
-            ];
-            return response()->json($data, 200);
-        }
-
-        return response()->json($students, 200);
+        return response()->json($students);
     }
 
     public function store(Request $request)
-{
-    $validator = Validator::make($request->all(), [
-        'nombre' => 'required|max:255',
-        'apellido' => 'required|max:255',
-        'career_id' => 'required|exists:careers,id', // Valida que career_id exista en la tabla careers
-        'email' => 'required|email|unique:students',
-        'password' => 'required|max:15',
-    ]);
+    {
+        $validator = Validator::make($request->all(), [
+            'nombre' => 'required|max:255',
+            'apellido' => 'required|max:255',
+            'email' => 'required|email|unique:students',
+            'password' => 'required|max:15',
+            'nombre_carrera' => 'required|max:255', // Validación para el nombre de la carrera
+        ]);
 
-    if ($validator->fails()) {
+        if ($validator->fails()) {
+            $data = [
+                'message' => 'Error en validación de los datos',
+                'errors' => $validator->errors(),
+                'status' => 400
+            ];
+            return response()->json($data, 400);
+        }
+
+        $passwordHashed = Hash::make($request->password);
+
+        $student = Student::create([
+            'nombre' => $request->nombre,
+            'apellido' => $request->apellido,
+            'email' => $request->email,
+            'password' => $passwordHashed,
+            'nombre_carrera' => $request->nombre_carrera, // Guardar nombre de la carrera
+        ]);
+
+        if (!$student) {
+            $data = [
+                'message' => 'Error al crear el estudiante',
+                'status' => 500
+            ];
+            return response()->json($data, 500);
+        }
+
         $data = [
-            'message' => 'Error en validación de los datos',
-            'errors' => $validator->errors(),
-            'status' => 400
+            'student' => $student,
+            'status' => 201
         ];
-        return response()->json($data, 400);
+
+        return response()->json($data, 201);
     }
-
-    // Encriptar la contraseña
-    $passwordHashed = Hash::make($request->password);
-
-    $student = Student::create([
-        'nombre' => $request->nombre,
-        'apellido' => $request->apellido,
-        'career_id' => $request->career_id,
-        'email' => $request->email,
-        'password' => $passwordHashed,
-    ]);
-
-    if (!$student) {
-        $data = [
-            'message' => 'Error al crear el estudiante',
-            'status' => 500
-        ];
-        return response()->json($data, 500);
-    }
-
-    $data = [
-        'student' => $student,
-        'status' => 201
-    ];
-
-    return response()->json($data, 201);
-}
-
 
     public function show($id)
     {
@@ -117,7 +108,7 @@ class StudentController extends Controller
     {
         $student = Student::find($id);
 
-        if(!$student) {
+        if (!$student) {
             $data = [
                 'message' => 'Estudiante no encontrado',
                 'status' => 404
@@ -128,9 +119,9 @@ class StudentController extends Controller
         $validator = Validator::make($request->all(), [
             'nombre' => 'required|max:255',
             'apellido' => 'required|max:255',
-            'carrera_id' => 'required|exists:carreras,id',
-            'email' => 'required|email|unique:students,email,'.$id,
+            'email' => 'required|email|unique:students,email,' . $id,
             'password' => 'required|max:15',
+            'nombre_carrera' => 'required|max:255', // Validación para el nombre de la carrera
         ]);
 
         if ($validator->fails()) {
@@ -144,9 +135,9 @@ class StudentController extends Controller
 
         $student->nombre = $request->nombre;
         $student->apellido = $request->apellido;
-        $student->carrera_id = $request->carrera_id;
         $student->email = $request->email;
-        $student->password = Hash::make($request->password); // Encriptar la contraseña
+        $student->password = Hash::make($request->password);
+        $student->nombre_carrera = $request->nombre_carrera; // Actualizar nombre de la carrera
 
         $student->save();
 
@@ -163,7 +154,7 @@ class StudentController extends Controller
     {
         $student = Student::find($id);
 
-        if(!$student) {
+        if (!$student) {
             $data = [
                 'message' => 'Estudiante no encontrado',
                 'status' => 404
@@ -174,9 +165,9 @@ class StudentController extends Controller
         $validator = Validator::make($request->all(), [
             'nombre' => 'max:255',
             'apellido' => 'max:255',
-            'carrera_id' => 'exists:carreras,id',
-            'email' => 'email|unique:students,email,'.$id,
+            'email' => 'email|unique:students,email,' . $id,
             'password' => 'max:15',
+            'nombre_carrera' => 'max:255', // Validación para el nombre de la carrera
         ]);
 
         if ($validator->fails()) {
@@ -196,16 +187,16 @@ class StudentController extends Controller
             $student->apellido = $request->apellido;
         }
 
-        if ($request->has('carrera_id')) {
-            $student->carrera_id = $request->carrera_id;
-        }
-
         if ($request->has('email')) {
             $student->email = $request->email;
         }
 
         if ($request->has('password')) {
-            $student->password = Hash::make($request->password); // Encriptar la contraseña
+            $student->password = Hash::make($request->password);
+        }
+
+        if ($request->has('nombre_carrera')) {
+            $student->nombre_carrera = $request->nombre_carrera; // Actualizar nombre de la carrera
         }
 
         $student->save();
